@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, BRAND, VEHICLE_TYPES } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
+import { LEGAL_URLS, openLegal } from '../../lib/legal';
 
 export default function Profile() {
   const { user, profile, application, appState, logout } = useAuth();
@@ -76,6 +77,13 @@ export default function Profile() {
           <Row icon="shield-checkmark" label="License #" value={profile?.license_number || application?.license_number || '-'} last />
         </Section>
 
+        {/* Legal */}
+        <Section title="Legal">
+          <LinkRow icon="document-text-outline" label="Privacy policy" onPress={() => openLegal(LEGAL_URLS.privacy)} />
+          <LinkRow icon="reader-outline" label="Terms of service" onPress={() => openLegal(LEGAL_URLS.terms)} />
+          <LinkRow icon="trash-outline" label="Delete my account" onPress={() => openLegal(LEGAL_URLS.deleteAccount)} danger last />
+        </Section>
+
         <Pressable
           onPress={confirmLogout}
           style={{ marginTop: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, borderRadius: 28, borderWidth: 1.5, borderColor: COLORS.dangerBg, backgroundColor: COLORS.dangerBg }}
@@ -114,6 +122,16 @@ function Row({ icon, label, value, last }: { icon: any; label: string; value: st
         {value}
       </Text>
     </View>
+  );
+}
+
+function LinkRow({ icon, label, onPress, danger, last }: { icon: any; label: string; onPress: () => void; danger?: boolean; last?: boolean }) {
+  return (
+    <Pressable onPress={onPress} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, borderBottomWidth: last ? 0 : 1, borderBottomColor: COLORS.border }}>
+      <Ionicons name={icon} size={20} color={danger ? COLORS.danger : COLORS.primary} />
+      <Text style={{ marginLeft: 12, flex: 1, fontWeight: '600', color: danger ? COLORS.danger : COLORS.textPrimary }}>{label}</Text>
+      <Ionicons name="open-outline" size={16} color={COLORS.textDim} />
+    </Pressable>
   );
 }
 

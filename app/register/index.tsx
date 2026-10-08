@@ -16,6 +16,7 @@ import { Button, Field, StepBar, BrandLogo } from '../../components/ui';
 import { Select, FileUpload, PickedFile } from '../../components/FormControls';
 import { COLORS, VEHICLE_KIND_OPTIONS, MOBILE_MONEY_NETWORKS } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
+import { LEGAL_URLS, openLegal } from '../../lib/legal';
 
 const YEARS = Array.from({ length: 26 }, (_, i) => {
   const y = String(new Date().getFullYear() - i);
@@ -289,8 +290,11 @@ export default function Register() {
                   color={agree ? COLORS.primary : COLORS.textMuted}
                 />
                 <Text style={{ flex: 1, color: COLORS.textMuted, fontSize: 13, lineHeight: 19 }}>
-                  By registering, you agree to our Terms of Service and Privacy Policy, and commit to provide only legal
-                  services on the One Delivery platform.
+                  By registering, you agree to our{' '}
+                  <Text style={{ color: COLORS.navy, fontWeight: '700' }} onPress={() => openLegal(LEGAL_URLS.terms)}>Terms of Service</Text>
+                  {' '}and{' '}
+                  <Text style={{ color: COLORS.navy, fontWeight: '700' }} onPress={() => openLegal(LEGAL_URLS.privacy)}>Privacy Policy</Text>
+                  , and commit to provide only legal services on the One Delivery platform.
                 </Text>
               </Pressable>
             </>
