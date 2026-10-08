@@ -13,6 +13,7 @@ import {
   saveUser,
 } from '../lib/storage';
 import { connectSocket, disconnectSocket } from '../lib/socket';
+import { getRegisteredPushToken, setRegisteredPushToken } from '../lib/pushToken';
 import type {
   User,
   AuthResponse,
@@ -164,6 +165,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [loadDriverState]);
 
   const logout = useCallback(async () => {
+    // Stop this phone getting the account's notifications
+    const pushToken = getRegisteredPushToken();
+    if (pushToken) {
+      await api.delete('/notifications/token', { data: { token: pushToken } }).catch(() => {});
+      setRegisteredPushToken(null);
+    }
     try {
       await post('/auth/logout', {});
     } catch {

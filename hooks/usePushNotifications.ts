@@ -5,6 +5,7 @@ import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { post } from '../lib/api';
+import { setRegisteredPushToken } from '../lib/pushToken';
 import { COLORS } from '../constants';
 
 Notifications.setNotificationHandler({
@@ -72,7 +73,10 @@ export function usePushNotifications(enabled: boolean) {
 
     registerForPush().then((token) => {
       if (token) {
-        post('/notifications/token', { token, type: 'expo' }).catch(() => {});
+        // `app` lets the backend send driver updates here and customer updates to the shop app
+        post('/notifications/token', { token, type: 'expo', app: 'driver', platform: Platform.OS })
+          .then(() => setRegisteredPushToken(token))
+          .catch(() => {});
       }
     });
 
