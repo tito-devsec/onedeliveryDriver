@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1039122274386",
+    "project_id": "onedelivery-8d9fc",
+    "storage_bucket": "onedelivery-8d9fc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1039122274386:android:9131b5dd434ef447d9e78b",
+        "android_client_info": {
+          "package_name": "com.onedelivery.customer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJjMy2vDdB6FoqIhoNwRBx4RhyHNXCkmY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1039122274386:android:3108300cbabbf569d9e78b",
+        "android_client_info": {
+          "package_name": "com.onedelivery.driver"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJjMy2vDdB6FoqIhoNwRBx4RhyHNXCkmY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

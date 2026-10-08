@@ -1,0 +1,112 @@
+{
+  "expo": {
+    "name": "One Delivery Driver",
+    "slug": "onedelivery-driver",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "onedeliverydriver",
+    "userInterfaceStyle": "light",
+    "jsEngine": "hermes",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.onedelivery.driver",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "One Delivery Driver needs your location to receive nearby delivery requests and navigate to customers.",
+        "NSLocationAlwaysUsageDescription": "One Delivery Driver tracks your location during active deliveries so customers can follow your trip in real time.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Location tracking is required to receive and complete delivery assignments.",
+        "NSCameraUsageDescription": "One Delivery Driver needs camera access to upload your documents and vehicle photos.",
+        "NSPhotoLibraryUsageDescription": "One Delivery Driver needs photo library access to upload your documents and vehicle photos.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": [
+          "location",
+          "fetch",
+          "remote-notification"
+        ]
+      },
+      "config": {
+        "googleMapsApiKey": "$EXPO_PUBLIC_GOOGLE_MAPS_IOS_KEY"
+      }
+    },
+    "android": {
+      "package": "com.onedelivery.driver",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.INTERNET",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "$EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY"
+        }
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "One Delivery Driver needs your location for live delivery tracking.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#F97316",
+          "androidMode": "default",
+          "androidCollapsedTitle": "One Delivery Driver"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "One Delivery Driver needs access to your photos to upload documents.",
+          "cameraPermission": "One Delivery Driver needs camera access to take document photos."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "ad9019f5-a816-431e-8764-ab188fcbb1ff"
+      },
+      "router": {}
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "experiments": {
+      "typedRoutes": true
+    },
+    "owner": "titocode"
+  }
+}
