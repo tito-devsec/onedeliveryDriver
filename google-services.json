@@ -1,45 +1,65 @@
 {
   "project_info": {
-    "project_number": "1039122274386",
-    "project_id": "onedelivery-8d9fc",
-    "storage_bucket": "onedelivery-8d9fc.firebasestorage.app"
+    "project_number": "745261569978",
+    "project_id": "onedelivery-bd863",
+    "storage_bucket": "onedelivery-bd863.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1039122274386:android:9131b5dd434ef447d9e78b",
+        "mobilesdk_app_id": "1:745261569978:android:dfffeaed9da8d743572f83",
         "android_client_info": {
-          "package_name": "com.onedelivery.customer"
+          "package_name": "com.onedelivery.rider"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "745261569978-sh47og36btkl1rv0gpca3k76je0aunau.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyAJjMy2vDdB6FoqIhoNwRBx4RhyHNXCkmY"
+          "current_key": "AIzaSyCclWz521PM8fvMpo9EPbYPQtuNhmap-jM"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "745261569978-sh47og36btkl1rv0gpca3k76je0aunau.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1039122274386:android:3108300cbabbf569d9e78b",
+        "mobilesdk_app_id": "1:745261569978:android:80bf5a3e0f19486c572f83",
         "android_client_info": {
-          "package_name": "com.onedelivery.driver"
+          "package_name": "com.onedelivery.shop"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "745261569978-sh47og36btkl1rv0gpca3k76je0aunau.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyAJjMy2vDdB6FoqIhoNwRBx4RhyHNXCkmY"
+          "current_key": "AIzaSyCclWz521PM8fvMpo9EPbYPQtuNhmap-jM"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "745261569978-sh47og36btkl1rv0gpca3k76je0aunau.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

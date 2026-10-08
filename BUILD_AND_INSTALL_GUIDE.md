@@ -76,7 +76,7 @@ The committed Google Maps key is a shared dev key. For production, replace it in
 
 In Google Cloud, the Android key must have **Maps SDK for Android** and
 **Directions API** enabled, and ideally be restricted to the app's package name
-`com.onedelivery.driver` and SHA-1 (get the SHA-1 from `eas credentials`).
+`com.onedelivery.rider` and SHA-1 (get the SHA-1 from `eas credentials`).
 
 > Tip: instead of plaintext in `eas.json`, you can store these as EAS environment
 > variables: `eas env:create --name EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY --value <key>`.
