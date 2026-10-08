@@ -9,7 +9,7 @@
     "userInterfaceStyle": "light",
     "jsEngine": "hermes",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash-logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#FFFFFF"
     },
@@ -70,6 +70,7 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
+      "@react-native-google-signin/google-signin",
       [
         "expo-location",
         {
@@ -84,7 +85,11 @@
           "icon": "./assets/notification-icon.png",
           "color": "#F97316",
           "androidMode": "default",
-          "androidCollapsedTitle": "One Delivery Driver"
+          "androidCollapsedTitle": "One Delivery Driver",
+          "sounds": [
+            "./assets/sounds/onedelivery_notification.wav"
+          ],
+          "defaultChannel": "onedelivery_alerts"
         }
       ],
       [
@@ -92,6 +97,15 @@
         {
           "photosPermission": "One Delivery Driver needs access to your photos to upload documents.",
           "cameraPermission": "One Delivery Driver needs camera access to take document photos."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-logo.png",
+          "imageWidth": 160,
+          "resizeMode": "contain",
+          "backgroundColor": "#FFFFFF"
         }
       ]
     ],
@@ -107,6 +121,9 @@
     "experiments": {
       "typedRoutes": true
     },
-    "owner": "titocode"
+    "owner": "titocode",
+    "updates": {
+      "url": "https://u.expo.dev/ad9019f5-a816-431e-8764-ab188fcbb1ff"
+    }
   }
 }

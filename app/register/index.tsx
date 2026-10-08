@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -23,19 +24,22 @@ const YEARS = Array.from({ length: 26 }, (_, i) => {
 
 export default function Register() {
   const router = useRouter();
-  const { user, register, applyAsDriver } = useAuth();
+  const { user, register, updateProfile, applyAsDriver, logout } = useAuth();
 
-  // If the user already has an account (came back to finish), skip account step
-  const startStep = user ? 1 : 0;
-  const [step, setStep] = useState(startStep);
+  // Drivers who already have an account (Google sign-up, or back to finish) still
+  // go through every step — step 0 also collects phone, vehicle type and the terms
+  // agreement the application needs; it just skips email/password.
+  const hasAccount = !!user;
+  const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Account
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  // Account (prefilled from the signed-in account, e.g. the Google profile name)
+  const nameParts = (user?.name || '').trim().split(/\s+/).filter(Boolean);
+  const [firstName, setFirstName] = useState(nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : nameParts[0] || '');
+  const [lastName, setLastName] = useState(nameParts.length > 1 ? nameParts[nameParts.length - 1] : '');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(user?.phone || '');
   const [password, setPassword] = useState('');
   const [city] = useState('Dar es Salaam');
   const [agree, setAgree] = useState(false);
@@ -77,9 +81,8 @@ export default function Register() {
       return (
         firstName.trim() &&
         lastName.trim() &&
-        email.includes('@') &&
+        (hasAccount || (email.includes('@') && password.length >= 8)) &&
         phone.trim().length >= 9 &&
-        password.length >= 8 &&
         vehicleKind &&
         agree
       );
@@ -88,7 +91,7 @@ export default function Register() {
     if (step === 3) return mmName.trim() && address.trim() && mmNumber.trim() && mmNetwork;
     return false;
   }, [
-    step, firstName, lastName, email, phone, password, vehicleKind, agree,
+    step, hasAccount, firstName, lastName, email, phone, password, vehicleKind, agree,
     nationalId, licenseNumber, driverPhoto, licenseDoc, idDoc,
     manufacturer, vehicleYear, plate, color, vehiclePhoto,
     mmName, address, mmNumber, mmNetwork,
@@ -105,19 +108,19 @@ export default function Register() {
     }
     buzz();
 
-    // Step 0 → create the account first
+    // Step 0 → create the account first (or save personal details on the existing one)
     if (step === 0) {
       setLoading(true);
       try {
-        await register({
-          name: `${firstName.trim()} ${lastName.trim()}`.trim(),
-          email: email.trim().toLowerCase(),
-          password,
-          phone: phone.trim(),
-        });
+        const name = `${firstName.trim()} ${lastName.trim()}`.trim();
+        if (hasAccount) {
+          await updateProfile({ name, phone: phone.trim() });
+        } else {
+          await register({ name, email: email.trim().toLowerCase(), password, phone: phone.trim() });
+        }
         setStep(1);
       } catch (e: any) {
-        setError(e.message || 'Could not create account');
+        setError(e.message || (hasAccount ? 'Could not save your details' : 'Could not create account'));
       } finally {
         setLoading(false);
       }
@@ -171,19 +174,25 @@ export default function Register() {
     }
   };
 
-  // Back: previous step, or leave the flow on the first step.
+  // Back: previous step, or leave the flow on the first step. A signed-in user
+  // without an application would be sent straight back here, so leaving signs out.
   const back = () => {
     setError('');
     if (loading) return;
-    if (step > startStep) {
+    if (step > 0) {
       buzz();
       setStep(step - 1);
+    } else if (hasAccount) {
+      Alert.alert('Leave registration?', 'You will be signed out. Sign in again any time to finish your application.', [
+        { text: 'Stay', style: 'cancel' },
+        { text: 'Sign out', style: 'destructive', onPress: async () => { await logout(); router.replace('/(auth)/welcome'); } },
+      ]);
     } else {
       router.replace('/(auth)/welcome');
     }
   };
 
-  const onFirstStep = step === startStep;
+  const onFirstStep = step === 0;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }} edges={['top', 'bottom']}>
@@ -224,15 +233,24 @@ export default function Register() {
             <>
               <Field label="First and middle name" required placeholder="First name" value={firstName} onChangeText={setFirstName} />
               <Field label="Last name" required placeholder="Last name" value={lastName} onChangeText={setLastName} />
-              <Field
-                label="Email address"
-                required
-                placeholder="you@example.com"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={email}
-                onChangeText={setEmail}
-              />
+              {hasAccount ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: COLORS.surface, borderRadius: 12, padding: 12, marginBottom: 16 }}>
+                  <Ionicons name="person-circle-outline" size={22} color={COLORS.navy} />
+                  <Text style={{ flex: 1, color: COLORS.textSecondary, fontSize: 13 }}>
+                    Signed in as <Text style={{ fontWeight: '700', color: COLORS.textPrimary }}>{user?.email}</Text>
+                  </Text>
+                </View>
+              ) : (
+                <Field
+                  label="Email address"
+                  required
+                  placeholder="you@example.com"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={email}
+                  onChangeText={setEmail}
+                />
+              )}
               <Field
                 label="Phone number"
                 required
@@ -242,14 +260,16 @@ export default function Register() {
                 onChangeText={setPhone}
                 hint="We'll send delivery updates here"
               />
-              <Field
-                label="Password"
-                required
-                placeholder="At least 8 characters"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-              />
+              {!hasAccount && (
+                <Field
+                  label="Password"
+                  required
+                  placeholder="At least 8 characters"
+                  secureTextEntry
+                  value={password}
+                  onChangeText={setPassword}
+                />
+              )}
               <Field label="City" value={city} editable={false} />
               <Select
                 label="What kind of vehicle do you have?"

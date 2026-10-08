@@ -24,3 +24,10 @@ android/
 
 expo-env.d.ts
 # @end expo-cli
+# build outputs
+*.aab
+*.apk
+
+# Firebase service-account keys (server/EAS secrets — never commit)
+*firebase-adminsdk*.json
+firebase-service-account.json

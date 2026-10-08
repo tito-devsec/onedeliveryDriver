@@ -16,18 +16,25 @@ Notifications.setNotificationHandler({
   }),
 });
 
+// Shared with the shop app and the backend (pushes target this channel; it is also
+// the app's default FCM channel). A channel's sound can't change once it exists on
+// a phone, hence the new id for the OneDelivery chime.
+const ANDROID_CHANNEL_ID = 'onedelivery_alerts';
+
+async function ensureAndroidChannel() {
+  if (Platform.OS !== 'android') return;
+  await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_ID, {
+    name: 'Trips & updates',
+    importance: Notifications.AndroidImportance.MAX,
+    vibrationPattern: [0, 250, 250, 250],
+    lightColor: COLORS.primary,
+    sound: 'onedelivery_notification.wav',
+  });
+}
+
 async function registerForPush(): Promise<string | null> {
   if (!Device.isDevice) return null;
-
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('onedelivery', {
-      name: 'One Delivery',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: COLORS.primary,
-      sound: 'default',
-    });
-  }
+  await ensureAndroidChannel();
 
   const { status: existing } = await Notifications.getPermissionsAsync();
   let finalStatus = existing;
@@ -56,6 +63,9 @@ export function usePushNotifications(enabled: boolean) {
   const router = useRouter();
   const receivedRef = useRef<Notifications.EventSubscription | undefined>(undefined);
   const responseRef = useRef<Notifications.EventSubscription | undefined>(undefined);
+
+  // Create the channel at launch so pushes always ring with the OneDelivery sound
+  useEffect(() => { ensureAndroidChannel().catch(() => {}); }, []);
 
   useEffect(() => {
     if (!enabled) return;

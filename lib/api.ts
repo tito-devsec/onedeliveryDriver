@@ -54,8 +54,10 @@ api.interceptors.response.use(
       return Promise.reject(new Error('Too many requests. Please wait a moment.'));
     }
 
-    // Try a single refresh on 401
-    if (error.response.status === 401 && original && !original._retry) {
+    // Try a single refresh on 401 — except for sign-in calls, whose 401 means
+    // wrong credentials and should show the backend's message
+    const isAuthCall = /^\/?auth\/(login|register|google|refresh)/.test(original?.url || '');
+    if (error.response.status === 401 && original && !original._retry && !isAuthCall) {
       original._retry = true;
 
       if (isRefreshing) {

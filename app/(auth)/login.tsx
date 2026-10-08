@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Button, Field, BrandLogo } from '../../components/ui';
+import GoogleButton from '../../components/GoogleButton';
 import { COLORS } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
 
@@ -89,6 +90,7 @@ export default function Login() {
           )}
 
           <Button title="Sign in" onPress={submit} loading={loading} style={{ marginTop: 8 }} />
+          <GoogleButton style={{ marginTop: 12 }} />
 
           <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 24 }}>
             <Text style={{ color: COLORS.textMuted }}>New driver? </Text>

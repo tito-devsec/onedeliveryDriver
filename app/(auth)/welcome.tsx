@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Button, BrandLogo } from '../../components/ui';
+import GoogleButton from '../../components/GoogleButton';
 import { COLORS, BRAND } from '../../constants';
 
 const { height } = Dimensions.get('window');
@@ -63,6 +64,7 @@ export default function Welcome() {
                 style={{ backgroundColor: '#3A4C8C' }}
                 onPress={() => router.push('/register')}
               />
+              <GoogleButton style={{ borderColor: 'transparent' }} />
             </View>
           </SafeAreaView>
         </View>

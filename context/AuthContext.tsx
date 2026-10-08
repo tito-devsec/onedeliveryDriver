@@ -5,7 +5,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import { api, post, get, setAuthFailureHandler } from '../lib/api';
+import { api, post, put, get, setAuthFailureHandler } from '../lib/api';
 import {
   saveTokens,
   clearTokens,
@@ -35,7 +35,9 @@ interface AuthContextType {
   isApproved: boolean;
   appState: 'none' | 'pending' | 'approved' | 'rejected';
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
+  updateProfile: (fields: { name?: string; phone?: string }) => Promise<void>;
   applyAsDriver: (form: FormData) => Promise<void>;
   refreshStatus: () => Promise<void>;
   logout: () => Promise<void>;
@@ -110,11 +112,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     [loadDriverState]
   );
 
+  // Google sign-in and sign-up: the backend creates the account on first use;
+  // new accounts then continue to the driver application (see the route guard)
+  const loginWithGoogle = useCallback(
+    async (idToken: string) => {
+      const data = await post<AuthResponse>('/auth/google', { idToken });
+      await saveTokens(data.accessToken, data.refreshToken);
+      await saveUser(data.user);
+      setUser(data.user);
+      await loadDriverState();
+      await connectSocket();
+    },
+    [loadDriverState]
+  );
+
   const register = useCallback(async (payload: RegisterPayload) => {
     const data = await post<AuthResponse>('/auth/register', payload);
     await saveTokens(data.accessToken, data.refreshToken);
     await saveUser(data.user);
     setUser(data.user);
+  }, []);
+
+  // Saves personal details for accounts that already exist (e.g. Google sign-up)
+  const updateProfile = useCallback(async (fields: { name?: string; phone?: string }) => {
+    const data = await put<{ user: User }>('/auth/me', fields);
+    setUser(data.user);
+    await saveUser(data.user);
   }, []);
 
   const applyAsDriver = useCallback(
@@ -175,7 +198,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isApproved,
         appState,
         login,
+        loginWithGoogle,
         register,
+        updateProfile,
         applyAsDriver,
         refreshStatus,
         logout,
