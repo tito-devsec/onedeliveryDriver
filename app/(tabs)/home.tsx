@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   AppState,
   Pressable,
   Text,
@@ -18,21 +19,27 @@ import { useRideRequests } from '../../hooks/useRideRequests';
 import { useCurrentRide } from '../../hooks/useEarnings';
 import { put } from '../../lib/api';
 import { emitDriverOnline, emitDriverOffline, connectSocket } from '../../lib/socket';
+import { isTracking, startTracking, stopTracking, refreshFix, getLastFix } from '../../lib/tracking';
 import RideRequestModal from '../../components/RideRequestModal';
+import type { RideOffer } from '../../types';
 
 export default function Home() {
   const router = useRouter();
-  const { user, profile, appState, application, refreshStatus } = useAuth();
+  const { profile, appState, application, refreshStatus } = useAuth();
   const approved = appState === 'approved';
 
   const [online, setOnline] = useState(false);
   const [toggling, setToggling] = useState(false);
   const mapRef = useRef<MapView>(null);
+  const centeredRef = useRef(false);
 
-  const { location, getCurrent } = useDriverLocation({ enabled: online });
-  const { incoming, accept, dismiss, available } = useRideRequests({ online: online && approved });
+  const { location, getCurrent } = useDriverLocation();
   const { data: currentRideData } = useCurrentRide(approved);
   const currentRide = currentRideData?.ride;
+  const { incoming, accept, decline, dismiss, open, available } = useRideRequests({
+    online: online && approved,
+    busy: !!currentRide,
+  });
 
   // Poll application status while pending so screen flips to GO LIVE on approval
   useFocusEffect(
@@ -45,6 +52,17 @@ export default function Home() {
     }, [appState, refreshStatus])
   );
 
+  // Still online from before (the location service keeps running): pick up where we were
+  useEffect(() => {
+    isTracking().then(async (running) => {
+      if (!running) return;
+      setOnline(true);
+      await connectSocket();
+      const f = getLastFix();
+      emitDriverOnline(f?.latitude, f?.longitude, f?.heading);
+    });
+  }, []);
+
   // Reconnect socket when app returns to foreground
   useEffect(() => {
     const sub = AppState.addEventListener('change', (s) => {
@@ -53,10 +71,25 @@ export default function Home() {
     return () => sub.remove();
   }, []);
 
-  // If there is an active delivery, route to it
+  // Centre the map on the driver once a position is known
   useEffect(() => {
-    if (currentRide) {
-      router.push(`/delivery/${currentRide.id}`);
+    if (location && !centeredRef.current && mapRef.current) {
+      centeredRef.current = true;
+      mapRef.current.animateToRegion({ ...location, latitudeDelta: 0.03, longitudeDelta: 0.03 }, 600);
+    }
+  }, [location?.latitude, location?.longitude]);
+
+  // If there is an active delivery, open it — once (accepting also opens it)
+  const openedRef = useRef<string | null>(null);
+  const openDelivery = (rideId: string) => {
+    openedRef.current = rideId;
+    router.push(`/delivery/${rideId}`);
+  };
+  useEffect(() => {
+    if (!currentRide) {
+      openedRef.current = null;
+    } else if (openedRef.current !== currentRide.id) {
+      openDelivery(currentRide.id);
     }
   }, [currentRide?.id]);
 
@@ -65,27 +98,47 @@ export default function Home() {
     setToggling(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
     try {
-      const next = !online;
-      await put('/rides/driver/online', { isOnline: next });
-      const cur = location || (await getCurrent());
-      if (next) {
+      if (!online) {
+        // The location service must start while the app is on screen
+        await startTracking();
+        const f = await refreshFix(true);
+        await put('/rides/driver/online', { isOnline: true, lat: f?.latitude, lng: f?.longitude, heading: f?.heading });
         await connectSocket();
-        emitDriverOnline(cur?.latitude || 0, cur?.longitude || 0);
+        emitDriverOnline(f?.latitude, f?.longitude, f?.heading);
+        setOnline(true);
       } else {
+        if (currentRide) {
+          Alert.alert('Delivery in progress', 'Finish or release your current delivery before going offline.');
+          return;
+        }
+        await put('/rides/driver/online', { isOnline: false });
         emitDriverOffline();
+        await stopTracking();
+        setOnline(false);
       }
-      setOnline(next);
-    } catch (e) {
-      // ignore
+    } catch (e: any) {
+      Alert.alert('Location needed', e?.message || 'Could not change your status. Please try again.');
     } finally {
       setToggling(false);
     }
   };
 
   const onAccept = async (rideId: string) => {
-    await accept(rideId);
-    router.push(`/delivery/${rideId}`);
+    try {
+      await accept(rideId);
+      openDelivery(rideId);
+    } catch (e: any) {
+      Alert.alert('Not available', e?.message || 'This delivery is no longer available.');
+      throw e;
+    }
   };
+
+  const locate = async () => {
+    const here = await getCurrent();
+    if (here) mapRef.current?.animateToRegion({ ...here, latitudeDelta: 0.02, longitudeDelta: 0.02 }, 500);
+  };
+
+  const offers = online && approved && !currentRide ? available : [];
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.surface }}>
@@ -94,26 +147,34 @@ export default function Home() {
         provider={PROVIDER_GOOGLE}
         style={{ flex: 1 }}
         customMapStyle={LIGHT_MAP_STYLE}
-        showsUserLocation={online}
+        showsUserLocation={false}
         showsMyLocationButton={false}
-        initialRegion={
-          location
-            ? { ...location, latitudeDelta: 0.02, longitudeDelta: 0.02 }
-            : DEFAULT_REGION
-        }
-        region={
-          location
-            ? { ...location, latitudeDelta: 0.02, longitudeDelta: 0.02 }
-            : undefined
-        }
+        initialRegion={location ? { ...location, latitudeDelta: 0.03, longitudeDelta: 0.03 } : DEFAULT_REGION}
       >
-        {online && location && (
+        {location && (
           <Marker coordinate={location} anchor={{ x: 0.5, y: 0.5 }}>
-            <View style={{ backgroundColor: COLORS.primary, padding: 8, borderRadius: 20, borderWidth: 3, borderColor: COLORS.white }}>
+            <View style={{ backgroundColor: online ? COLORS.primary : COLORS.textDim, padding: 8, borderRadius: 20, borderWidth: 3, borderColor: COLORS.white }}>
               <Ionicons name="navigate" size={16} color={COLORS.white} />
             </View>
           </Marker>
         )}
+        {/* Shops of the deliveries offered to this driver */}
+        {offers.map((r) => (
+          <Marker
+            key={r.id}
+            coordinate={{ latitude: Number(r.pickup_lat), longitude: Number(r.pickup_lng) }}
+            onPress={() => open(r.id)}
+          >
+            <View style={{ alignItems: 'center' }}>
+              <View style={{ backgroundColor: COLORS.navy, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10, marginBottom: 2 }}>
+                <Text style={{ color: COLORS.white, fontSize: 11, fontWeight: '800' }}>TZS {Number(r.earning).toLocaleString()}</Text>
+              </View>
+              <View style={{ backgroundColor: COLORS.primary, padding: 6, borderRadius: 16, borderWidth: 2, borderColor: COLORS.white }}>
+                <Ionicons name="storefront" size={14} color={COLORS.white} />
+              </View>
+            </View>
+          </Marker>
+        ))}
       </MapView>
 
       {/* Top bar */}
@@ -132,7 +193,7 @@ export default function Home() {
             </View>
           )}
           <Pressable
-            onPress={() => getCurrent()}
+            onPress={locate}
             style={{ backgroundColor: COLORS.white, width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', elevation: 4, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 6 }}
           >
             <Ionicons name="locate" size={22} color={COLORS.textPrimary} />
@@ -143,12 +204,24 @@ export default function Home() {
       {/* Bottom panel */}
       <SafeAreaView edges={['bottom']} style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
         <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
+          {!!currentRide && (
+            <Pressable
+              onPress={() => openDelivery(currentRide.id)}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: COLORS.navy, borderRadius: 18, padding: 14, marginBottom: 10 }}
+            >
+              <Ionicons name="bicycle" size={22} color={COLORS.white} />
+              <Text style={{ flex: 1, color: COLORS.white, fontWeight: '800' }}>Delivery in progress</Text>
+              <Text style={{ color: COLORS.white, fontWeight: '700' }}>Open</Text>
+              <Ionicons name="chevron-forward" size={18} color={COLORS.white} />
+            </Pressable>
+          )}
           {approved ? (
             <ApprovedPanel
               online={online}
               toggling={toggling}
               onToggle={goLive}
-              availableCount={available.length}
+              offers={offers}
+              onOpen={open}
               earnings={profile}
             />
           ) : appState === 'rejected' ? (
@@ -160,8 +233,8 @@ export default function Home() {
       </SafeAreaView>
 
       {/* Incoming request modal */}
-      {online && approved && (
-        <RideRequestModal ride={incoming} onAccept={onAccept} onDecline={dismiss} />
+      {online && approved && !currentRide && (
+        <RideRequestModal ride={incoming} onAccept={onAccept} onDecline={decline} onTimeout={dismiss} />
       )}
     </View>
   );
@@ -218,13 +291,15 @@ function ApprovedPanel({
   online,
   toggling,
   onToggle,
-  availableCount,
+  offers,
+  onOpen,
   earnings,
 }: {
   online: boolean;
   toggling: boolean;
   onToggle: () => void;
-  availableCount: number;
+  offers: RideOffer[];
+  onOpen: (rideId: string) => void;
   earnings: any;
 }) {
   return (
@@ -233,9 +308,34 @@ function ApprovedPanel({
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 }}>
           <Stat label="Today balance" value={`TZS ${Number(earnings?.balance || 0).toLocaleString()}`} />
           <Stat label="Trips" value={String(earnings?.total_trips ?? 0)} />
-          <Stat label="Requests" value={String(availableCount)} />
+          <Stat label="Requests" value={String(offers.length)} />
         </View>
       )}
+
+      {/* Offers near you, nearest shop first */}
+      {online && offers.length > 0 && (
+        <View style={{ marginBottom: 14, gap: 8 }}>
+          {offers.slice(0, 3).map((r) => (
+            <Pressable
+              key={r.id}
+              onPress={() => onOpen(r.id)}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: COLORS.surface, borderRadius: 14, padding: 12 }}
+            >
+              <Ionicons name="storefront" size={18} color={COLORS.primary} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontWeight: '700', color: COLORS.textPrimary }} numberOfLines={1}>
+                  {r.shop_name || r.pickup_address || 'Pickup'}
+                </Text>
+                <Text style={{ color: COLORS.textMuted, fontSize: 12 }}>
+                  {r.pickup_distance_km != null ? `${r.pickup_distance_km} km away · ` : ''}trip {Number(r.trip_km || r.distance_km).toFixed(1)} km
+                </Text>
+              </View>
+              <Text style={{ fontWeight: '800', color: COLORS.success }}>TZS {Number(r.earning).toLocaleString()}</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+
       <Pressable
         onPress={onToggle}
         disabled={toggling}
@@ -262,7 +362,12 @@ function ApprovedPanel({
       </Pressable>
       {!online && (
         <Text style={{ textAlign: 'center', color: COLORS.textMuted, fontSize: 12, marginTop: 10 }}>
-          {BRAND.slogan} · Go live to receive delivery requests
+          {BRAND.slogan} · Go live to receive delivery requests near you
+        </Text>
+      )}
+      {online && offers.length === 0 && (
+        <Text style={{ textAlign: 'center', color: COLORS.textMuted, fontSize: 12, marginTop: 10 }}>
+          You'll get deliveries from shops near you first. Keep the app open or in the background.
         </Text>
       )}
     </View>

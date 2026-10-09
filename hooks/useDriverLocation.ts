@@ -1,95 +1,42 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import * as Location from 'expo-location';
-import { put } from '../lib/api';
-import { emitDriverLocation } from '../lib/socket';
+import { getLastFix, onFix, refreshFix } from '../lib/tracking';
 import type { LatLng } from '../types';
 
-interface Options {
-  enabled: boolean; // only track when online
-  rideId?: string; // attach to socket payload for live customer tracking
-}
+// Live position for the screens. The fixes themselves come from the background
+// location task in lib/tracking.ts, which also sends them to the server.
+export function useDriverLocation() {
+  const first = getLastFix();
+  const [location, setLocation] = useState<LatLng | null>(
+    first ? { latitude: first.latitude, longitude: first.longitude } : null
+  );
+  const [heading, setHeading] = useState(first?.heading ?? 0);
+  const [speed, setSpeed] = useState<number | null>(first?.speed ?? null);
 
-export function useDriverLocation({ enabled, rideId }: Options) {
-  const [location, setLocation] = useState<LatLng | null>(null);
-  const [heading, setHeading] = useState(0);
-  const [permission, setPermission] = useState<boolean | null>(null);
-  const watchRef = useRef<Location.LocationSubscription | null>(null);
-  const lastPushRef = useRef(0);
+  useEffect(
+    () =>
+      onFix((f) => {
+        setLocation({ latitude: f.latitude, longitude: f.longitude });
+        setHeading(f.heading);
+        setSpeed(f.speed);
+      }),
+    []
+  );
 
-  const requestPermission = useCallback(async () => {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    const granted = status === 'granted';
-    setPermission(granted);
-    if (granted) {
-      // Best-effort background permission (Android)
-      Location.requestBackgroundPermissionsAsync().catch(() => {});
-    }
-    return granted;
+  // Ask once for permission so the map can show where the driver is
+  useEffect(() => {
+    if (getLastFix()) return;
+    Location.getForegroundPermissionsAsync()
+      .then(({ status }) => (status === 'granted' ? refreshFix(false) : null))
+      .catch(() => {});
   }, []);
 
   const getCurrent = useCallback(async (): Promise<LatLng | null> => {
-    try {
-      const pos = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-      });
-      const coords = {
-        latitude: pos.coords.latitude,
-        longitude: pos.coords.longitude,
-      };
-      setLocation(coords);
-      return coords;
-    } catch {
-      return null;
-    }
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') return null;
+    const f = await refreshFix(false);
+    return f ? { latitude: f.latitude, longitude: f.longitude } : null;
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      if (!enabled) {
-        watchRef.current?.remove();
-        watchRef.current = null;
-        return;
-      }
-      const granted = permission ?? (await requestPermission());
-      if (!granted || cancelled) return;
-
-      await getCurrent();
-
-      watchRef.current = await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.High,
-          timeInterval: 4000,
-          distanceInterval: 15,
-        },
-        (pos) => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          const hd = pos.coords.heading ?? 0;
-          setLocation({ latitude: lat, longitude: lng });
-          if (hd >= 0) setHeading(hd);
-
-          // Emit live to socket immediately (cheap)
-          emitDriverLocation({ lat, lng, heading: hd, rideId });
-
-          // Throttle DB write to ~ every 8s
-          const now = Date.now();
-          if (now - lastPushRef.current > 8000) {
-            lastPushRef.current = now;
-            put('/rides/driver/location', { lat, lng, heading: hd }).catch(
-              () => {}
-            );
-          }
-        }
-      );
-    })();
-
-    return () => {
-      cancelled = true;
-      watchRef.current?.remove();
-      watchRef.current = null;
-    };
-  }, [enabled, rideId, permission, requestPermission, getCurrent]);
-
-  return { location, heading, permission, requestPermission, getCurrent };
+  return { location, heading, speed, getCurrent };
 }

@@ -1,83 +1,108 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as Haptics from 'expo-haptics';
 import { get, post } from '../lib/api';
-import { getSocket } from '../lib/socket';
-import type { RideRequest } from '../types';
+import { subscribe } from '../lib/socket';
+import type { RideOffer } from '../types';
 
 interface Options {
   online: boolean;
+  busy: boolean; // on a delivery: no new offers
 }
 
-export function useRideRequests({ online }: Options) {
-  const [available, setAvailable] = useState<RideRequest[]>([]);
-  const [incoming, setIncoming] = useState<RideRequest | null>(null);
-  const [loading, setLoading] = useState(false);
+const nearestFirst = (a: RideOffer, b: RideOffer) =>
+  (a.pickup_distance_km ?? 999) - (b.pickup_distance_km ?? 999);
+
+// Deliveries the server offered to this driver. They arrive instantly over the socket
+// ("ride:offer"), disappear when someone else takes them ("ride:closed"), and a poll
+// every 15 s catches anything missed while the socket was down.
+export function useRideRequests({ online, busy }: Options) {
+  const [available, setAvailable] = useState<RideOffer[]>([]);
+  const [incoming, setIncoming] = useState<RideOffer | null>(null);
   const seenRef = useRef<Set<string>>(new Set());
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const incomingRef = useRef<RideOffer | null>(null);
+  incomingRef.current = incoming;
+  const active = online && !busy;
+
+  const popUp = useCallback((offer: RideOffer) => {
+    if (incomingRef.current || seenRef.current.has(offer.id)) return;
+    setIncoming(offer);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
+  }, []);
 
   const fetchAvailable = useCallback(async () => {
     try {
-      const res = await get<{ rides: RideRequest[] }>('/rides/driver/available');
-      setAvailable(res.rides || []);
-      // Surface the newest unseen request as an incoming modal
-      const fresh = (res.rides || []).find((r) => !seenRef.current.has(r.id));
-      if (fresh && !incoming) {
-        setIncoming(fresh);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(
-          () => {}
-        );
-      }
+      const res = await get<{ rides: RideOffer[] }>('/rides/driver/available');
+      const list = (res.rides || []).sort(nearestFirst);
+      setAvailable(list);
+      const shown = incomingRef.current;
+      if (shown && !list.some((r) => r.id === shown.id)) setIncoming(null);
+      const next = list.find((r) => !seenRef.current.has(r.id));
+      if (next) popUp(next);
     } catch {
-      /* ignore */
+      /* offline for a moment — the next poll retries */
     }
-  }, [incoming]);
+  }, [popUp]);
 
-  // Poll while online (fallback to sockets)
   useEffect(() => {
-    if (!online) {
-      if (pollRef.current) clearInterval(pollRef.current);
+    if (!active) {
       setAvailable([]);
       setIncoming(null);
       return;
     }
-    setLoading(true);
-    fetchAvailable().finally(() => setLoading(false));
-    pollRef.current = setInterval(fetchAvailable, 8000);
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
-  }, [online, fetchAvailable]);
+    fetchAvailable();
+    const t = setInterval(fetchAvailable, 15000);
+    return () => clearInterval(t);
+  }, [active, fetchAvailable]);
 
-  // Real-time socket push for new requests
   useEffect(() => {
-    if (!online) return;
-    const socket = getSocket();
-    if (!socket) return;
-
-    const onNew = () => {
-      fetchAvailable();
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(
-        () => {}
-      );
-    };
-    socket.on('ride:new', onNew);
-    socket.on('new_ride_request', onNew);
+    if (!active) return;
+    const offOffer = subscribe('ride:offer', (offer: RideOffer) => {
+      setAvailable((list) => [offer, ...list.filter((r) => r.id !== offer.id)].sort(nearestFirst));
+      popUp(offer);
+    });
+    const offClosed = subscribe('ride:closed', ({ rideId }: { rideId: string }) => {
+      setAvailable((list) => list.filter((r) => r.id !== rideId));
+      if (incomingRef.current?.id === rideId) setIncoming(null);
+    });
     return () => {
-      socket.off('ride:new', onNew);
-      socket.off('new_ride_request', onNew);
+      offOffer();
+      offClosed();
     };
-  }, [online, fetchAvailable]);
+  }, [active, popUp]);
+
+  const remove = (rideId: string) => {
+    seenRef.current.add(rideId);
+    setAvailable((list) => list.filter((r) => r.id !== rideId));
+    if (incomingRef.current?.id === rideId) setIncoming(null);
+  };
 
   const accept = useCallback(async (rideId: string) => {
-    await post(`/rides/${rideId}/accept`, {});
-    setIncoming(null);
-    seenRef.current.add(rideId);
+    try {
+      await post(`/rides/${rideId}/accept`, {});
+    } finally {
+      remove(rideId);
+    }
   }, []);
 
+  // "Decline": the server passes it straight to the next nearest driver
+  const decline = useCallback((rideId: string) => {
+    remove(rideId);
+    post(`/rides/${rideId}/decline`, {}).catch(() => {});
+  }, []);
+
+  // Countdown ran out: close the pop-up but keep the offer in the list
   const dismiss = useCallback((rideId: string) => {
     seenRef.current.add(rideId);
-    setIncoming(null);
+    if (incomingRef.current?.id === rideId) setIncoming(null);
   }, []);
 
-  return { available, incoming, loading, accept, dismiss, refetch: fetchAvailable };
+  const open = useCallback(
+    (rideId: string) => {
+      const offer = available.find((r) => r.id === rideId);
+      if (offer) setIncoming(offer);
+    },
+    [available]
+  );
+
+  return { available, incoming, accept, decline, dismiss, open, refetch: fetchAvailable };
 }

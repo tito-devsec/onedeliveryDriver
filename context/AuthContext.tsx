@@ -13,6 +13,7 @@ import {
   saveUser,
 } from '../lib/storage';
 import { connectSocket, disconnectSocket } from '../lib/socket';
+import { stopTracking } from '../lib/tracking';
 import { getRegisteredPushToken, setRegisteredPushToken } from '../lib/pushToken';
 import type {
   User,
@@ -165,6 +166,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [loadDriverState]);
 
   const logout = useCallback(async () => {
+    // Go offline and stop sharing location before the session ends
+    await put('/rides/driver/online', { isOnline: false }).catch(() => {});
+    await stopTracking();
     // Stop this phone getting the account's notifications
     const pushToken = getRegisteredPushToken();
     if (pushToken) {

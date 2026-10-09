@@ -1,14 +1,15 @@
 import { Linking, Platform } from 'react-native';
-import type { LatLng } from '../types';
+import { get } from './api';
+import type { LatLng, RideRoute } from '../types';
 
-const DIRECTIONS_KEY = process.env.EXPO_PUBLIC_GOOGLE_DIRECTIONS_KEY || '';
-
-export interface RouteResult {
-  coordinates: LatLng[];
-  distanceText: string;
-  durationText: string;
-  distanceMeters: number;
-  durationSeconds: number;
+// Routes come from the OneDelivery server (Google Routes API there, cached and shared
+// with the customer's map), so the app holds no Google web-service key.
+export async function fetchRideRoute(rideId: string): Promise<RideRoute | null> {
+  try {
+    return await get<RideRoute>(`/rides/${rideId}/route`);
+  } catch {
+    return null;
+  }
 }
 
 // Decode a Google encoded polyline into [{latitude, longitude}]
@@ -46,54 +47,35 @@ export function decodePolyline(encoded: string): LatLng[] {
   return points;
 }
 
-export async function fetchRoute(
-  origin: LatLng,
-  destination: LatLng,
-  mode: 'driving' | 'two_wheeler' = 'driving'
-): Promise<RouteResult | null> {
-  if (!DIRECTIONS_KEY || DIRECTIONS_KEY.startsWith('YOUR_')) {
-    // Fallback: straight line if no key configured
-    return {
-      coordinates: [origin, destination],
-      distanceText: '',
-      durationText: '',
-      distanceMeters: 0,
-      durationSeconds: 0,
-    };
-  }
-  try {
-    const url =
-      `https://maps.googleapis.com/maps/api/directions/json` +
-      `?origin=${origin.latitude},${origin.longitude}` +
-      `&destination=${destination.latitude},${destination.longitude}` +
-      `&mode=driving&key=${DIRECTIONS_KEY}`;
-    const res = await fetch(url);
-    const json = await res.json();
-    if (json.status !== 'OK' || !json.routes?.length) {
-      return { coordinates: [origin, destination], distanceText: '', durationText: '', distanceMeters: 0, durationSeconds: 0 };
-    }
-    const route = json.routes[0];
-    const leg = route.legs[0];
-    return {
-      coordinates: decodePolyline(route.overview_polyline.points),
-      distanceText: leg.distance?.text || '',
-      durationText: leg.duration?.text || '',
-      distanceMeters: leg.distance?.value || 0,
-      durationSeconds: leg.duration?.value || 0,
-    };
-  } catch {
-    return { coordinates: [origin, destination], distanceText: '', durationText: '', distanceMeters: 0, durationSeconds: 0 };
-  }
+// Straight-line distance in metres
+export function distanceMeters(a: LatLng, b: LatLng): number {
+  const R = 6371000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(b.latitude - a.latitude);
+  const dLng = toRad(b.longitude - a.longitude);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.latitude)) * Math.cos(toRad(b.latitude)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
-// Open native turn-by-turn navigation in Google / Apple Maps
-export function openExternalNavigation(dest: LatLng, label?: string) {
+export function formatDistance(meters: number): string {
+  return meters < 1000 ? `${Math.max(10, Math.round(meters / 10) * 10)} m` : `${(meters / 1000).toFixed(1)} km`;
+}
+
+export function formatEta(seconds: number): string {
+  const min = Math.max(1, Math.round(seconds / 60));
+  return min < 60 ? `${min} min` : `${Math.floor(min / 60)} h ${min % 60} min`;
+}
+
+// Open turn-by-turn navigation in Google Maps (Apple Maps on iOS)
+export function openExternalNavigation(dest: LatLng) {
   const latlng = `${dest.latitude},${dest.longitude}`;
   const url =
     Platform.OS === 'ios'
       ? `https://maps.apple.com/?daddr=${latlng}&dirflg=d`
-      : `google.navigation:q=${latlng}`;
+      : `google.navigation:q=${latlng}&mode=d`;
   Linking.openURL(url).catch(() =>
-    Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${latlng}`)
+    Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${latlng}&travelmode=driving`)
   );
 }

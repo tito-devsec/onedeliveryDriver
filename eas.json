@@ -15,9 +15,6 @@
         "EXPO_PUBLIC_APP_ENV": "development",
         "EXPO_PUBLIC_API_URL": "https://api.onedelivery.co.tz/api",
         "EXPO_PUBLIC_SOCKET_URL": "https://api.onedelivery.co.tz",
-        "EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY": "REPLACE_WITH_YOUR_GOOGLE_MAPS_KEY",
-        "EXPO_PUBLIC_GOOGLE_MAPS_IOS_KEY": "REPLACE_WITH_YOUR_GOOGLE_MAPS_KEY",
-        "EXPO_PUBLIC_GOOGLE_DIRECTIONS_KEY": "REPLACE_WITH_YOUR_GOOGLE_MAPS_KEY",
         "EXPO_PUBLIC_ENABLE_OTP": "true"
       },
       "channel": "development"
@@ -31,9 +28,6 @@
         "EXPO_PUBLIC_APP_ENV": "staging",
         "EXPO_PUBLIC_API_URL": "https://api.onedelivery.co.tz/api",
         "EXPO_PUBLIC_SOCKET_URL": "https://api.onedelivery.co.tz",
-        "EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY": "REPLACE_WITH_YOUR_GOOGLE_MAPS_KEY",
-        "EXPO_PUBLIC_GOOGLE_MAPS_IOS_KEY": "REPLACE_WITH_YOUR_GOOGLE_MAPS_KEY",
-        "EXPO_PUBLIC_GOOGLE_DIRECTIONS_KEY": "REPLACE_WITH_YOUR_GOOGLE_MAPS_KEY",
         "EXPO_PUBLIC_ENABLE_OTP": "true"
       },
       "channel": "preview"
@@ -48,9 +42,6 @@
         "EAS_BUILD_NO_EXPO_GO_WARNING": "true",
         "EXPO_PUBLIC_API_URL": "https://api.onedelivery.co.tz/api",
         "EXPO_PUBLIC_SOCKET_URL": "https://api.onedelivery.co.tz",
-        "EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY": "REPLACE_WITH_YOUR_GOOGLE_MAPS_KEY",
-        "EXPO_PUBLIC_GOOGLE_MAPS_IOS_KEY": "REPLACE_WITH_YOUR_GOOGLE_MAPS_KEY",
-        "EXPO_PUBLIC_GOOGLE_DIRECTIONS_KEY": "REPLACE_WITH_YOUR_GOOGLE_MAPS_KEY",
         "EXPO_PUBLIC_ENABLE_OTP": "true"
       },
       "channel": "production"
@@ -65,9 +56,6 @@
         "EAS_BUILD_NO_EXPO_GO_WARNING": "true",
         "EXPO_PUBLIC_API_URL": "https://api.onedelivery.co.tz/api",
         "EXPO_PUBLIC_SOCKET_URL": "https://api.onedelivery.co.tz",
-        "EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY": "REPLACE_WITH_YOUR_GOOGLE_MAPS_KEY",
-        "EXPO_PUBLIC_GOOGLE_MAPS_IOS_KEY": "REPLACE_WITH_YOUR_GOOGLE_MAPS_KEY",
-        "EXPO_PUBLIC_GOOGLE_DIRECTIONS_KEY": "REPLACE_WITH_YOUR_GOOGLE_MAPS_KEY",
         "EXPO_PUBLIC_ENABLE_OTP": "true"
       },
       "channel": "production-apk"

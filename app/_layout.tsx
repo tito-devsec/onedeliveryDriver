@@ -1,4 +1,6 @@
 import '../global.css';
+// Registers the background location task; must load before anything else runs
+import '../lib/tracking';
 import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';

@@ -92,7 +92,67 @@ export interface RideRequest {
   customer_phone?: string;
   driver_lat?: number;
   driver_lng?: number;
+  shop_name?: string | null;
+  shop_phone?: string | null;
+  earning?: number;
+  delivery_fee_paid?: number | boolean;
+  route_distance_m?: number | null;
+  route_duration_s?: number | null;
   created_at: string;
+}
+
+// A delivery offered to this driver (nearest drivers get it first)
+export interface RideOffer {
+  id: string;
+  vehicle_type: string;
+  status: RideStatus;
+  fare: number;
+  earning: number;
+  pickup_lat: number;
+  pickup_lng: number;
+  pickup_address: string;
+  dropoff_lat: number;
+  dropoff_lng: number;
+  dropoff_address: string;
+  shop_name: string | null;
+  customer_name: string | null;
+  distance_km: number;
+  trip_km: number;
+  trip_min: number | null;
+  pickup_distance_km: number | null;
+  pickup_eta_min: number | null;
+  delivery_fee_paid: boolean;
+  created_at: string;
+}
+
+// GET /rides/:id/route — the whole trip and the live leg from the driver's position
+export interface RideRoute {
+  status: RideStatus;
+  pickup: { lat: number; lng: number; address: string };
+  dropoff: { lat: number; lng: number; address: string };
+  trip: { polyline: string; distanceMeters: number | null; durationSeconds: number | null } | null;
+  driver: { lat: number; lng: number; heading: number; at: number | null } | null;
+  leg: {
+    leg: 'to_pickup' | 'to_dropoff';
+    polyline: string | null;
+    version: number | null;
+    remainingMeters: number;
+    etaSeconds: number;
+    estimated: boolean;
+  } | null;
+}
+
+// Socket "ride:progress" — sent after every GPS fix during a delivery
+export interface RideProgress {
+  rideId: string;
+  lat: number;
+  lng: number;
+  heading: number;
+  status: RideStatus;
+  leg: 'to_pickup' | 'to_dropoff' | null;
+  etaSeconds: number | null;
+  remainingMeters: number | null;
+  routeVersion: number | null;
 }
 
 export interface EarningEntry {
