@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS, BRAND, VEHICLE_TYPES } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
 import { LEGAL_URLS, openLegal } from '../../lib/legal';
+import AppVersion from '../../components/AppVersion';
 
 export default function Profile() {
   const { user, profile, application, appState, logout } = useAuth();
@@ -92,8 +93,11 @@ export default function Profile() {
           <Text style={{ color: COLORS.danger, fontWeight: '700' }}>Sign out</Text>
         </Pressable>
 
-        <Text style={{ textAlign: 'center', color: COLORS.textDim, marginTop: 20, fontSize: 12 }}>
-          {BRAND.driverName} v1.0.0 · {BRAND.slogan}
+        {/* App version + over-the-air update */}
+        <AppVersion />
+
+        <Text style={{ textAlign: 'center', color: COLORS.textDim, marginTop: 16, fontSize: 12 }}>
+          {BRAND.slogan}
         </Text>
       </ScrollView>
     </SafeAreaView>

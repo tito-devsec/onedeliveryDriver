@@ -1,15 +1,14 @@
 import { useMemo, useState } from 'react';
 import {
   Alert,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   Text,
   View,
 } from 'react-native';
+import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Button, Field, StepBar, BrandLogo } from '../../components/ui';
@@ -25,6 +24,7 @@ const YEARS = Array.from({ length: 26 }, (_, i) => {
 
 export default function Register() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user, register, updateProfile, applyAsDriver, logout } = useAuth();
 
   // Drivers who already have an account (Google sign-up, or back to finish) still
@@ -211,12 +211,10 @@ export default function Register() {
         </Text>
       </View>
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
-      >
-        <ScrollView
+      <View style={{ flex: 1 }}>
+        {/* Keeps the focused field above the keyboard and the Back/Next bar riding on it */}
+        <KeyboardAwareScrollView
+          bottomOffset={100}
           contentContainerStyle={{ padding: 24, paddingTop: 8, paddingBottom: 24 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -396,9 +394,10 @@ export default function Register() {
               <Text style={{ color: COLORS.danger, fontSize: 13 }}>{error}</Text>
             </View>
           )}
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
-        {/* Pinned Back / Next navigation — shown on EVERY step */}
+        {/* Pinned Back / Next navigation — shown on EVERY step, on top of the keyboard while typing */}
+        <KeyboardStickyView offset={{ opened: insets.bottom }}>
         <View
           style={{
             flexDirection: 'row',
@@ -429,7 +428,8 @@ export default function Register() {
             onPress={next}
           />
         </View>
-      </KeyboardAvoidingView>
+        </KeyboardStickyView>
+      </View>
     </SafeAreaView>
   );
 }
