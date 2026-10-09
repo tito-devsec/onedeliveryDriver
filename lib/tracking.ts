@@ -82,9 +82,9 @@ export async function startTracking(): Promise<void> {
   if (await isTracking()) return;
   await Location.startLocationUpdatesAsync(LOCATION_TASK, {
     accuracy: Location.Accuracy.High,
-    timeInterval: 5000,
-    distanceInterval: 0, // a fix every 5 s even when parked: the server's freshness heartbeat
-    deferredUpdatesInterval: 5000,
+    timeInterval: 3000,
+    distanceInterval: 0, // a fix every 3 s even when parked: live tracking + the server's freshness heartbeat
+    deferredUpdatesInterval: 3000,
     pausesUpdatesAutomatically: false,
     activityType: Location.ActivityType.AutomotiveNavigation,
     showsBackgroundLocationIndicator: true,

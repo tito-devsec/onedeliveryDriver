@@ -3,7 +3,9 @@ import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, STATUS_CONFIG, VEHICLE_TYPES } from '../../constants';
+import { Image } from 'expo-image';
+import { COLORS, STATUS_CONFIG } from '../../constants';
+import { vehicleSideImage } from '../../lib/vehicles';
 import { useCurrentRide, useDriverHistory } from '../../hooks/useEarnings';
 import { useAuth } from '../../context/AuthContext';
 import type { RideRequest } from '../../types';
@@ -74,7 +76,6 @@ export default function Orders() {
 }
 
 function HistoryRow({ ride }: { ride: RideRequest }) {
-  const vehicle = VEHICLE_TYPES.find((v) => v.id === ride.vehicle_type);
   const date = new Date(ride.created_at).toLocaleDateString(undefined, {
     day: 'numeric',
     month: 'short',
@@ -83,7 +84,7 @@ function HistoryRow({ ride }: { ride: RideRequest }) {
     <View style={{ backgroundColor: '#fff', borderRadius: 14, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: COLORS.border }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Text style={{ fontSize: 20 }}>{vehicle?.emoji || '📦'}</Text>
+          <Image source={vehicleSideImage(ride.vehicle_type)} style={{ width: 42, height: 28 }} contentFit="contain" />
           <Text style={{ fontWeight: '700', color: COLORS.textPrimary }}>{date}</Text>
         </View>
         <Text style={{ fontWeight: '800', color: COLORS.success }}>

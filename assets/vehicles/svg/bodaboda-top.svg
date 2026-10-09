@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+<defs>
+<filter id="rim-shadow" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+<feGaussianBlur in="SourceAlpha" stdDeviation="1.45" result="blur"/>
+<feComponentTransfer in="blur" result="outline"><feFuncA type="linear" slope="9" intercept="-0.55"/></feComponentTransfer>
+<feFlood flood-color="#FFFFFF"/>
+<feComposite in2="outline" operator="in" result="rim"/>
+<feGaussianBlur in="outline" stdDeviation="1.5" result="soft"/>
+<feOffset in="soft" dy="2" result="offset"/>
+<feFlood flood-color="#000000" flood-opacity=".25"/>
+<feComposite in2="offset" operator="in" result="shadow"/>
+<feMerge><feMergeNode in="shadow"/><feMergeNode in="rim"/><feMergeNode in="SourceGraphic"/></feMerge>
+</filter>
+
+</defs>
+<g id="vehicle" filter="url(#rim-shadow)">
+<rect x="46" y="15" width="4" height="17" rx="2" fill="#2B2F36"/>
+<rect x="44" y="22" width="1.4" height="7" rx=".7" fill="#C9CED6"/>
+<rect x="50.6" y="22" width="1.4" height="7" rx=".7" fill="#C9CED6"/>
+<rect x="45.5" y="17.8" width="5" height="9.6" rx="2.5" fill="#283A7A"/>
+<rect x="47.3" y="18.8" width="1.4" height="7" rx=".7" fill="#3B4F99"/>
+<circle cx="48" cy="30" r="3.6" fill="#283A7A"/>
+<path d="M44.62 28.77A3.6 3.6 0 0 1 51.38 28.77Q48 27.2 44.62 28.77Z" fill="#FFF4CC"/>
+<rect x="45.6" y="31.6" width="4.8" height="2.6" rx="1.2" fill="#24282E"/>
+<path d="M37 35.6Q48 32.6 59 35.6" fill="none" stroke="#3A3F47" stroke-width="1.8" stroke-linecap="round"/>
+<path d="M40.8 34.6L37.6 29.4M55.2 34.6L58.4 29.4" stroke="#3A3F47" stroke-width="1" stroke-linecap="round"/>
+<ellipse cx="37" cy="28.6" rx="2.6" ry="1.5" fill="#2B2F36"/>
+<ellipse cx="59" cy="28.6" rx="2.6" ry="1.5" fill="#2B2F36"/>
+<rect x="33.8" y="34.4" width="5.6" height="2.8" rx="1.4" fill="#1C1F24" transform="rotate(-10 36.6 35.8)"/>
+<rect x="56.6" y="34.4" width="5.6" height="2.8" rx="1.4" fill="#1C1F24" transform="rotate(10 59.4 35.8)"/>
+<path d="M48 33.6C53.4 33.6 54.6 37 54.2 41C53.8 45 51.6 48.6 48 48.6C44.4 48.6 42.2 45 41.8 41C41.4 37 42.6 33.6 48 33.6Z" fill="#283A7A"/>
+<path d="M48 35.2C50.4 35.2 51 37 50.8 39.4C50.6 41.4 49.6 42.6 48 42.6C46.4 42.6 45.4 41.4 45.2 39.4C45 37 45.6 35.2 48 35.2Z" fill="#3B4F99"/>
+<path d="M43.6 55.5L41.4 45M52.4 55.5L54.6 45" stroke="#2F3542" stroke-width="5" stroke-linecap="round"/>
+<rect x="44" y="55" width="8" height="10" rx="3.2" fill="#2A2E35"/>
+<rect x="39" y="62" width="18" height="16" rx="2.6" fill="#EA580C"/>
+<rect x="40.2" y="63.2" width="15.6" height="13.6" rx="1.8" fill="#F97316"/>
+<rect x="41.2" y="64.2" width="13.6" height="3" rx="1.2" fill="#FDBA74" opacity=".8"/>
+<rect x="46" y="76.4" width="4" height="1.8" rx=".6" fill="#1E2B5C"/>
+<rect x="46.3" y="77.4" width="3.4" height="3.4" rx="1.2" fill="#24282E"/>
+<rect x="46.5" y="79.3" width="3" height="1.7" rx=".8" fill="#DC2626"/>
+<path d="M39.2 53.8C38.8 49.4 42.4 46.4 48 46.4C53.6 46.4 57.2 49.4 56.8 53.8C56.4 57 52.8 58.6 48 58.6C43.2 58.6 39.6 57 39.2 53.8Z" fill="#F97316"/>
+<path d="M41.4 50L38.6 37M54.6 50L57.4 37" stroke="#EA580C" stroke-width="3.8" stroke-linecap="round"/>
+<circle cx="38.4" cy="36" r="1.9" fill="#1F2329"/>
+<circle cx="57.6" cy="36" r="1.9" fill="#1F2329"/>
+<ellipse cx="48" cy="47" rx="5.5" ry="6.1" fill="#283A7A"/>
+<ellipse cx="45.9" cy="47.8" rx="1.3" ry="2.7" fill="#3B4F99"/>
+<path d="M42.83 44.91A5.5 6.1 0 0 1 53.17 44.91Q48 41.4 42.83 44.91Z" fill="#1F2937"/>
+<path d="M45 43.2Q47 41.9 49.4 41.8L49 42.6Q47.2 42.7 45.6 43.7Z" fill="#9CC4E4" opacity=".85"/>
+</g>
+</svg>

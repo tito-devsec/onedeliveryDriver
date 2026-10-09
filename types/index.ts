@@ -96,18 +96,30 @@ export interface RideRequest {
   shop_phone?: string | null;
   earning?: number;
   delivery_fee_paid?: number | boolean;
+  payment_method?: PaymentMethod;
+  cash_to_collect?: number; // what to collect at the door: the agreed price unless paid in the app
+  suggested_fare?: number | null;
+  offered_fare?: number | null;
   route_distance_m?: number | null;
   route_duration_s?: number | null;
   created_at: string;
 }
 
-// A delivery offered to this driver (nearest drivers get it first)
+export type PaymentMethod = 'mobile' | 'cash';
+
+// A delivery offered to this driver (nearest drivers get it first). `fare` is the
+// customer's offer; the driver accepts it or answers with their own price (counter).
 export interface RideOffer {
   id: string;
   vehicle_type: string;
   status: RideStatus;
   fare: number;
   earning: number;
+  suggested_fare: number;
+  payment_method: PaymentMethod;
+  offer_status: 'offered' | 'countered';
+  my_counter: number | null;
+  my_counter_earning: number | null;
   pickup_lat: number;
   pickup_lng: number;
   pickup_address: string;
@@ -139,7 +151,17 @@ export interface RideRoute {
     remainingMeters: number;
     etaSeconds: number;
     estimated: boolean;
+    steps?: RouteStep[];
   } | null;
+}
+
+// One turn-by-turn step (Google Routes API); the instruction is the manoeuvre at its start
+export interface RouteStep {
+  maneuver: string;
+  text: string;
+  distanceMeters: number;
+  start: { lat: number; lng: number } | null;
+  end: { lat: number; lng: number } | null;
 }
 
 // Socket "ride:progress" — sent after every GPS fix during a delivery

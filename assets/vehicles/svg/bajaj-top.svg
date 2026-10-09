@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+<defs>
+<filter id="rim-shadow" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+<feGaussianBlur in="SourceAlpha" stdDeviation="1.45" result="blur"/>
+<feComponentTransfer in="blur" result="outline"><feFuncA type="linear" slope="9" intercept="-0.55"/></feComponentTransfer>
+<feFlood flood-color="#FFFFFF"/>
+<feComposite in2="outline" operator="in" result="rim"/>
+<feGaussianBlur in="outline" stdDeviation="1.5" result="soft"/>
+<feOffset in="soft" dy="2" result="offset"/>
+<feFlood flood-color="#000000" flood-opacity=".25"/>
+<feComposite in2="offset" operator="in" result="shadow"/>
+<feMerge><feMergeNode in="shadow"/><feMergeNode in="rim"/><feMergeNode in="SourceGraphic"/></feMerge>
+</filter>
+
+</defs>
+<g id="vehicle" filter="url(#rim-shadow)">
+<rect x="25.8" y="61.5" width="5.6" height="15" rx="2.4" fill="#2B2F36"/>
+<rect x="64.6" y="61.5" width="5.6" height="15" rx="2.4" fill="#2B2F36"/>
+<path d="M35.6 26.6L30.4 23.4M60.4 26.6L65.6 23.4" stroke="#3A3F47" stroke-width="1" stroke-linecap="round"/>
+<ellipse cx="29.8" cy="23" rx="2.3" ry="1.5" fill="#2B2F36" transform="rotate(-20 29.8 23)"/>
+<ellipse cx="66.2" cy="23" rx="2.3" ry="1.5" fill="#2B2F36" transform="rotate(20 66.2 23)"/>
+<rect x="45.4" y="12.4" width="5.2" height="9" rx="2.4" fill="#2B2F36"/>
+<path d="M34 28.4L37.3 18.8C37.9 16.8 39.6 15.4 41.7 15.4H54.3C56.4 15.4 58.1 16.8 58.7 18.8L62 28.4Z" fill="#F97316"/>
+<path d="M34 28.4L37.3 18.8C37.9 16.8 39.6 15.4 41.7 15.4H42.4C40.9 15.9 40 17 39.6 18.6L37.4 28.4ZM62 28.4L58.7 18.8C58.1 16.8 56.4 15.4 54.3 15.4H53.6C55.1 15.9 56 17 56.4 18.6L58.6 28.4Z" fill="#EA580C"/>
+<path d="M42.2 18.2H53.8L55.4 25.4H40.6Z" fill="#FDBA74" opacity=".4"/>
+<rect x="45.4" y="14.6" width="5.2" height="2" rx="1" fill="#FFF4CC"/>
+<path d="M34 32L34.4 27.2C39 24.9 57 24.9 61.6 27.2L62 32Z" fill="#BFE3F7"/>
+<path d="M34.4 27.2C39 24.9 57 24.9 61.6 27.2" fill="none" stroke="#2A2E35" stroke-width="1"/>
+<path d="M39.6 26.2L43.4 25.6L41.4 32H37.8Z" fill="#FFFFFF" opacity=".7"/>
+<rect x="29" y="31" width="38" height="52.6" rx="7.5" fill="#1E2B5C"/>
+<rect x="30.8" y="32.6" width="34.4" height="49.2" rx="6" fill="#283A7A"/>
+<path d="M30.8 74.6H65.2V75.8C65.2 79.1 62.5 81.8 59.2 81.8H36.8C33.5 81.8 30.8 79.1 30.8 75.8Z" fill="#22326C"/>
+<rect x="33.4" y="35" width="9" height="38" rx="4" fill="#3B4F99" opacity=".75"/>
+<path d="M31 47H65M31 61H65" stroke="#1E2B5C" stroke-width="1.1"/>
+<path d="M30.9 74.6H65.1" stroke="#1E2B5C" stroke-width="1.1"/>
+<path d="M36.6 31.9H59.4" stroke="#3B4F99" stroke-width="1.2" stroke-linecap="round"/>
+</g>
+</svg>

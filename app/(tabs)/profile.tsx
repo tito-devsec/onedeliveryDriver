@@ -1,7 +1,9 @@
 import { Alert, Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { Image as VehicleImage } from 'expo-image';
 import { COLORS, BRAND, VEHICLE_TYPES } from '../../constants';
+import { vehicleSideImage } from '../../lib/vehicles';
 import { useAuth } from '../../context/AuthContext';
 import { LEGAL_URLS, openLegal } from '../../lib/legal';
 import AppVersion from '../../components/AppVersion';
@@ -60,7 +62,10 @@ export default function Profile() {
 
         {/* Vehicle */}
         <Section title="Vehicle">
-          <Row icon="car" label="Type" value={`${vehicle?.emoji || ''} ${vehicle?.label || '-'}`} />
+          {!!vehicle && (
+            <VehicleImage source={vehicleSideImage(vehicle.id)} style={{ width: 120, height: 80, alignSelf: 'center', marginVertical: 6 }} contentFit="contain" />
+          )}
+          <Row icon="car" label="Type" value={vehicle?.label || '-'} />
           <Row icon="pricetag" label="Plate" value={(profile?.plate_number || application?.plate_number || '-').toUpperCase()} />
           <Row icon="color-palette" label="Colour" value={profile?.vehicle_color || application?.vehicle_color || '-'} />
           <Row icon="construct" label="Model" value={profile?.vehicle_model || application?.vehicle_model || '-'} last />

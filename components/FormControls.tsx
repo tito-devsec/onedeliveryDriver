@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Image as ExpoImage } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS } from '../constants';
+import { vehicleSideImage } from '../lib/vehicles';
 
 export interface PickedFile {
   uri: string;
@@ -130,6 +132,56 @@ export function FileUpload({ label, required, hint, file, onPick }: UploadProps)
           {file ? 'Uploaded — change' : 'Upload file'}
         </Text>
       </Pressable>
+    </View>
+  );
+}
+
+// ── Vehicle choice (picture tiles) ────────────────────────────────────────────
+interface VehiclePickerProps {
+  label?: string;
+  required?: boolean;
+  value?: string;
+  options: { label: string; value: string }[];
+  onChange: (value: string) => void;
+}
+export function VehiclePicker({ label, required, value, options, onChange }: VehiclePickerProps) {
+  return (
+    <View style={{ marginBottom: 18 }}>
+      {label && (
+        <Text style={{ color: COLORS.textPrimary, fontSize: 14, fontWeight: '700', marginBottom: 8 }}>
+          {label} {required && <Text style={{ color: COLORS.danger }}>*</Text>}
+        </Text>
+      )}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+        {options.map((o) => {
+          const active = value === o.value;
+          return (
+            <TouchableOpacity
+              key={o.value}
+              onPress={() => onChange(o.value)}
+              activeOpacity={0.85}
+              style={{
+                width: '48%',
+                flexGrow: 1,
+                backgroundColor: active ? '#FFF4EC' : COLORS.surface,
+                borderRadius: 14,
+                borderWidth: 2,
+                borderColor: active ? COLORS.primary : 'transparent',
+                paddingVertical: 10,
+                alignItems: 'center',
+              }}
+            >
+              <ExpoImage source={vehicleSideImage(o.value)} style={{ width: 96, height: 64 }} contentFit="contain" />
+              <Text style={{ color: COLORS.textPrimary, fontWeight: '700', marginTop: 4 }}>{o.label}</Text>
+              {active && (
+                <View style={{ position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: 10, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="checkmark" size={13} color={COLORS.white} />
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
   );
 }

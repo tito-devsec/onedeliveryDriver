@@ -12,7 +12,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Button, Field, StepBar, BrandLogo } from '../../components/ui';
-import { Select, FileUpload, PickedFile } from '../../components/FormControls';
+import { Select, FileUpload, PickedFile, VehiclePicker } from '../../components/FormControls';
 import { COLORS, VEHICLE_KIND_OPTIONS, MOBILE_MONEY_NETWORKS } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
 import { LEGAL_URLS, openLegal } from '../../lib/legal';
@@ -270,10 +270,9 @@ export default function Register() {
                 />
               )}
               <Field label="City" value={city} editable={false} />
-              <Select
+              <VehiclePicker
                 label="What kind of vehicle do you have?"
                 required
-                placeholder="Select vehicle"
                 value={vehicleKind}
                 options={VEHICLE_KIND_OPTIONS}
                 onChange={setVehicleKind}

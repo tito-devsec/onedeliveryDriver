@@ -12,6 +12,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useQueryClient } from '@tanstack/react-query';
 import { COLORS, BRAND, LIGHT_MAP_STYLE, DEFAULT_REGION } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
 import { useDriverLocation } from '../../hooks/useDriverLocation';
@@ -21,10 +22,14 @@ import { put } from '../../lib/api';
 import { emitDriverOnline, emitDriverOffline, connectSocket } from '../../lib/socket';
 import { isTracking, startTracking, stopTracking, refreshFix, getLastFix } from '../../lib/tracking';
 import RideRequestModal from '../../components/RideRequestModal';
+import VehicleMarker from '../../components/VehicleMarker';
 import type { RideOffer } from '../../types';
+
+const money = (n: number | null | undefined) => `TZS ${Math.round(Number(n) || 0).toLocaleString('en-US')}`;
 
 export default function Home() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { profile, appState, application, refreshStatus } = useAuth();
   const approved = appState === 'approved';
 
@@ -33,12 +38,17 @@ export default function Home() {
   const mapRef = useRef<MapView>(null);
   const centeredRef = useRef(false);
 
-  const { location, getCurrent } = useDriverLocation();
+  const { location, heading, getCurrent } = useDriverLocation();
   const { data: currentRideData } = useCurrentRide(approved);
   const currentRide = currentRideData?.ride;
-  const { incoming, accept, decline, dismiss, open, available } = useRideRequests({
+  const { incoming, accept, counter, decline, dismiss, open, available, notice } = useRideRequests({
     online: online && approved,
     busy: !!currentRide,
+    // The customer accepted this driver's price: the delivery is theirs
+    onAssigned: (rideId) => {
+      queryClient.invalidateQueries({ queryKey: ['currentRide'] });
+      openDelivery(rideId);
+    },
   });
 
   // Poll application status while pending so screen flips to GO LIVE on approval
@@ -126,11 +136,18 @@ export default function Home() {
   const onAccept = async (rideId: string) => {
     try {
       await accept(rideId);
+      queryClient.invalidateQueries({ queryKey: ['currentRide'] });
       openDelivery(rideId);
     } catch (e: any) {
       Alert.alert('Not available', e?.message || 'This delivery is no longer available.');
       throw e;
     }
+  };
+
+  // The driver's own price: the customer sees it next to the others and may accept it
+  const onCounter = async (rideId: string, fare: number) => {
+    await counter(rideId, fare);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
   };
 
   const locate = async () => {
@@ -152,22 +169,20 @@ export default function Home() {
         initialRegion={location ? { ...location, latitudeDelta: 0.03, longitudeDelta: 0.03 } : DEFAULT_REGION}
       >
         {location && (
-          <Marker coordinate={location} anchor={{ x: 0.5, y: 0.5 }}>
-            <View style={{ backgroundColor: online ? COLORS.primary : COLORS.textDim, padding: 8, borderRadius: 20, borderWidth: 3, borderColor: COLORS.white }}>
-              <Ionicons name="navigate" size={16} color={COLORS.white} />
-            </View>
-          </Marker>
+          <VehicleMarker coordinate={location} heading={heading} vehicleType={profile?.vehicle_type || application?.vehicle_type} zIndex={20} />
         )}
-        {/* Shops of the deliveries offered to this driver */}
+        {/* Shops of the deliveries offered to this driver, with the customer's price */}
         {offers.map((r) => (
           <Marker
-            key={r.id}
+            key={`${r.id}:${r.offer_status}:${r.fare}`}
             coordinate={{ latitude: Number(r.pickup_lat), longitude: Number(r.pickup_lng) }}
             onPress={() => open(r.id)}
           >
             <View style={{ alignItems: 'center' }}>
-              <View style={{ backgroundColor: COLORS.navy, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10, marginBottom: 2 }}>
-                <Text style={{ color: COLORS.white, fontSize: 11, fontWeight: '800' }}>TZS {Number(r.earning).toLocaleString()}</Text>
+              <View style={{ backgroundColor: r.offer_status === 'countered' ? COLORS.primary : COLORS.navy, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10, marginBottom: 2 }}>
+                <Text style={{ color: COLORS.white, fontSize: 11, fontWeight: '800' }}>
+                  {r.offer_status === 'countered' ? `You: ${money(r.my_counter)}` : money(r.fare)}
+                </Text>
               </View>
               <View style={{ backgroundColor: COLORS.primary, padding: 6, borderRadius: 16, borderWidth: 2, borderColor: COLORS.white }}>
                 <Ionicons name="storefront" size={14} color={COLORS.white} />
@@ -204,6 +219,12 @@ export default function Home() {
       {/* Bottom panel */}
       <SafeAreaView edges={['bottom']} style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
         <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
+          {!!notice && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: COLORS.navy, borderRadius: 14, padding: 12, marginBottom: 10 }}>
+              <Ionicons name="information-circle" size={20} color={COLORS.white} />
+              <Text style={{ flex: 1, color: COLORS.white, fontWeight: '700' }}>{notice}</Text>
+            </View>
+          )}
           {!!currentRide && (
             <Pressable
               onPress={() => openDelivery(currentRide.id)}
@@ -234,7 +255,7 @@ export default function Home() {
 
       {/* Incoming request modal */}
       {online && approved && !currentRide && (
-        <RideRequestModal ride={incoming} onAccept={onAccept} onDecline={decline} onTimeout={dismiss} />
+        <RideRequestModal ride={incoming} onAccept={onAccept} onCounter={onCounter} onDecline={decline} onTimeout={dismiss} />
       )}
     </View>
   );
@@ -330,7 +351,16 @@ function ApprovedPanel({
                   {r.pickup_distance_km != null ? `${r.pickup_distance_km} km away · ` : ''}trip {Number(r.trip_km || r.distance_km).toFixed(1)} km
                 </Text>
               </View>
-              <Text style={{ fontWeight: '800', color: COLORS.success }}>TZS {Number(r.earning).toLocaleString()}</Text>
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={{ fontWeight: '800', color: r.offer_status === 'countered' ? COLORS.primary : COLORS.textPrimary }}>
+                  {money(r.offer_status === 'countered' ? r.my_counter : r.fare)}
+                </Text>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: r.offer_status === 'countered' ? COLORS.navy : COLORS.textMuted }}>
+                  {r.offer_status === 'countered'
+                    ? 'your price · waiting'
+                    : r.delivery_fee_paid ? 'paid in app' : r.payment_method === 'cash' ? 'cash' : 'mobile money'}
+                </Text>
+              </View>
             </Pressable>
           ))}
         </View>

@@ -89,6 +89,9 @@ export function usePushNotifications(enabled: boolean) {
         };
         if (data?.screen === 'driver_home' || data?.type === 'driver_approved') {
           router.replace('/(tabs)/home');
+        } else if (data?.screen === 'delivery' && data.rideId) {
+          // The customer accepted this driver's price, or paid in the app
+          router.push(`/delivery/${data.rideId}`);
         } else if (data?.rideId) {
           router.push('/(tabs)/home');
         }

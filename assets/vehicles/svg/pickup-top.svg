@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+<defs>
+<filter id="rim-shadow" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+<feGaussianBlur in="SourceAlpha" stdDeviation="1.45" result="blur"/>
+<feComponentTransfer in="blur" result="outline"><feFuncA type="linear" slope="9" intercept="-0.55"/></feComponentTransfer>
+<feFlood flood-color="#FFFFFF"/>
+<feComposite in2="outline" operator="in" result="rim"/>
+<feGaussianBlur in="outline" stdDeviation="1.5" result="soft"/>
+<feOffset in="soft" dy="2" result="offset"/>
+<feFlood flood-color="#000000" flood-opacity=".25"/>
+<feComposite in2="offset" operator="in" result="shadow"/>
+<feMerge><feMergeNode in="shadow"/><feMergeNode in="rim"/><feMergeNode in="SourceGraphic"/></feMerge>
+</filter>
+<clipPath id="pt-cab"><path d="M30 28.6V11C30 7.6 32.4 5.4 35.8 5.4H60.2C63.6 5.4 66 7.6 66 11V28.6Z"/></clipPath>
+</defs>
+<g id="vehicle" filter="url(#rim-shadow)">
+<g transform="translate(48 48) scale(0.965) translate(-48 -48)">
+<path d="M31 9.6L27.6 10.6M65 9.6L68.4 10.6" stroke="#2F343B" stroke-width="1" stroke-linecap="round"/>
+<rect x="25.6" y="8.2" width="2.8" height="6.4" rx="1" fill="#1F2329"/>
+<rect x="67.6" y="8.2" width="2.8" height="6.4" rx="1" fill="#1F2329"/>
+<rect x="32" y="4.5" width="32" height="2" rx="1" fill="#4B5563"/>
+<path d="M30 28.6V11C30 7.6 32.4 5.4 35.8 5.4H60.2C63.6 5.4 66 7.6 66 11V28.6Z" fill="#E8EBEF"/>
+<g clip-path="url(#pt-cab)">
+<rect x="30" y="5" width="2" height="24" fill="#C9D0D8"/>
+<rect x="64" y="5" width="2" height="24" fill="#C9D0D8"/>
+<rect x="34" y="11" width="28" height="15.6" rx="2" fill="#F8F9FB"/>
+</g>
+<path d="M33 6.6H63L62.2 9.2H33.8Z" fill="#8CCBEB"/>
+<path d="M30 28.6V11C30 7.6 32.4 5.4 35.8 5.4H60.2C63.6 5.4 66 7.6 66 11V28.6Z" fill="none" stroke="#AEB6C1" stroke-width=".8"/>
+<rect x="38" y="28.4" width="20" height="2" fill="#2F343B"/>
+<rect x="28" y="30.2" width="40" height="61.3" rx="1.6" fill="#EA580C"/>
+<rect x="29.6" y="31.8" width="36.8" height="58.1" rx=".8" fill="#F97316"/>
+<path d="M29.6 39H66.4M29.6 46.5H66.4M29.6 54H66.4M29.6 61.5H66.4M29.6 69H66.4M29.6 76.5H66.4M29.6 84H66.4" stroke="#EA580C" stroke-width=".9" opacity=".6"/>
+<rect x="30.4" y="32.6" width="3.2" height="56.4" rx="1" fill="#FB8A3C" opacity=".7"/>
+</g>
+</g>
+</svg>

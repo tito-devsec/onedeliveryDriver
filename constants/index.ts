@@ -33,10 +33,10 @@ export const BRAND = {
 
 // Vehicle types — MUST match backend ENUM('bodaboda','bajaj','pickup','toyo')
 export const VEHICLE_TYPES = [
-  { id: 'bodaboda', label: 'Bodaboda', subtitle: 'Motorcycle · fast', emoji: '🏍️' },
-  { id: 'bajaj', label: 'Bajaj', subtitle: '3-wheel · affordable', emoji: '🛺' },
-  { id: 'toyo', label: 'Toyo', subtitle: 'Toyota Hilux / similar', emoji: '🚙' },
-  { id: 'pickup', label: 'Pickup / Carry', subtitle: 'Large & heavy items', emoji: '🚛' },
+  { id: 'bodaboda', label: 'Bodaboda', subtitle: 'Motorcycle · fast' },
+  { id: 'bajaj', label: 'Bajaj', subtitle: '3-wheel · affordable' },
+  { id: 'toyo', label: 'Toyo', subtitle: 'Toyota Hilux / similar' },
+  { id: 'pickup', label: 'Pickup / Carry', subtitle: 'Large & heavy items' },
 ] as const;
 
 export type VehicleTypeId = (typeof VEHICLE_TYPES)[number]['id'];
