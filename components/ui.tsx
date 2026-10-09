@@ -2,10 +2,10 @@ import React from 'react';
 import {
   ActivityIndicator,
   Image,
-  Pressable,
   Text,
   TextInput,
   TextInputProps,
+  TouchableOpacity,
   View,
   ViewStyle,
 } from 'react-native';
@@ -63,12 +63,25 @@ export function BrandLogo({
 }
 
 // ── Primary / secondary / outline button ─────────────────────────────────────
+// Pill buttons in the OneDelivery colours. Styles are plain objects: NativeWind's
+// Pressable wrapper drops function styles (`style={({ pressed }) => …}`), which left
+// buttons without background or layout in release builds.
+type ButtonVariant = 'primary' | 'navy' | 'navyLight' | 'white' | 'outline' | 'ghost' | 'danger';
+const BUTTON_COLORS: Record<ButtonVariant, { bg: string; fg: string; border?: string }> = {
+  primary:   { bg: COLORS.primary, fg: COLORS.white },        // orange
+  navy:      { bg: COLORS.navy, fg: COLORS.white },
+  navyLight: { bg: '#3A4C8C', fg: COLORS.white },             // on navy backgrounds
+  white:     { bg: COLORS.white, fg: COLORS.navy },
+  outline:   { bg: 'transparent', fg: COLORS.textPrimary, border: COLORS.border },
+  ghost:     { bg: 'transparent', fg: COLORS.textPrimary },
+  danger:    { bg: COLORS.danger, fg: COLORS.white },
+};
 interface ButtonProps {
   title: string;
   onPress?: () => void;
   loading?: boolean;
   disabled?: boolean;
-  variant?: 'primary' | 'navy' | 'outline' | 'ghost' | 'danger';
+  variant?: ButtonVariant;
   style?: ViewStyle;
   icon?: keyof typeof Ionicons.glyphMap;
   iconRight?: keyof typeof Ionicons.glyphMap;
@@ -83,35 +96,28 @@ export function Button({
   icon,
   iconRight,
 }: ButtonProps) {
-  const bg =
-    variant === 'primary'
-      ? COLORS.primary
-      : variant === 'navy'
-        ? COLORS.navy
-        : variant === 'danger'
-          ? COLORS.danger
-          : 'transparent';
-  const isOutline = variant === 'outline' || variant === 'ghost';
-  const txtColor = isOutline ? COLORS.textPrimary : COLORS.white;
+  const { bg, fg: txtColor, border } = BUTTON_COLORS[variant];
   const isDisabled = disabled || loading;
 
   return (
-    <Pressable
+    <TouchableOpacity
       onPress={onPress}
       disabled={isDisabled}
-      style={({ pressed }) => [
+      activeOpacity={0.85}
+      style={[
         {
           backgroundColor: bg,
           borderRadius: 30,
-          paddingVertical: 16,
+          minHeight: 54,
+          paddingVertical: 15,
           paddingHorizontal: 18,
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
           gap: 8,
-          opacity: isDisabled ? 0.5 : pressed ? 0.88 : 1,
-          borderWidth: variant === 'outline' ? 1.5 : 0,
-          borderColor: COLORS.border,
+          opacity: isDisabled ? 0.5 : 1,
+          borderWidth: border ? 1.5 : 0,
+          borderColor: border || 'transparent',
         },
         style,
       ]}
@@ -121,11 +127,11 @@ export function Button({
       ) : (
         <>
           {icon && <Ionicons name={icon} size={18} color={txtColor} />}
-          <Text style={{ color: txtColor, fontSize: 16, fontWeight: '700' }}>{title}</Text>
+          <Text style={{ color: txtColor, fontSize: 16, fontWeight: '800' }}>{title}</Text>
           {iconRight && <Ionicons name={iconRight} size={18} color={txtColor} />}
         </>
       )}
-    </Pressable>
+    </TouchableOpacity>
   );
 }
 

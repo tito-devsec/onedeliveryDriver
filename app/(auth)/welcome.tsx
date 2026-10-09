@@ -56,14 +56,10 @@ export default function Welcome() {
               </Text>
             </View>
 
+            {/* OneDelivery orange to sign in, lighter navy to register, Google's white button */}
             <View style={{ gap: 12, paddingBottom: 8 }}>
               <Button title="Sign in" variant="primary" onPress={() => router.push('/(auth)/login')} />
-              <Button
-                title="Register"
-                variant="navy"
-                style={{ backgroundColor: '#3A4C8C' }}
-                onPress={() => router.push('/register')}
-              />
+              <Button title="Register" variant="navyLight" onPress={() => router.push('/register')} />
               <GoogleButton style={{ borderColor: 'transparent' }} />
             </View>
           </SafeAreaView>
